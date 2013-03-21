@@ -1,44 +1,30 @@
-#include <SD.h>
 
-#include <SdFat.h>
-#include <SdFatUtil.h>
-
-Sd2Card card;
-SdVolume volume;
-SdFile root;
-
-#include <SoftwareSerial.h>
-
-#include <Adafruit_VC0706.h>
 #include <Adafruit_GPS.h>
-
-
-// Camera
-SoftwareSerial cameraConnection(7,8);
-Adafruit_VC0706 cam =  Adafruit_VC0706(&cameraConnection); 
-
-
-//GPS
-SoftwareSerial gpsConnection(3,6);
-Adafruit_GPS GPS = Adafruit_GPS(&gpsConnection);
+#include <Adafruit_VC0706.h>
+#include <SoftwareSerial.h>
+#include <SD.h> 
 
 
 #define GPSECHO true
-boolean usingInterrupt = false;
-
 #define chipSelect 4
 
-char fileName[13] = "P2345678.JPG";
+
+SoftwareSerial gpsConnection(3,6);
+Adafruit_GPS GPS(&gpsConnection);
+
+SoftwareSerial cameraConnection(7,8);
+Adafruit_VC0706 cam(&cameraConnection); 
+
 
 void init_gps()
 {
-  Serial.println("Initializing GPS ... ");
-
+  Serial.print("Initializing GPS... ");    
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-  GPS.sendCommand(PGCMD_ANTENNA);
-
+  GPS.sendCommand(PGCMD_NOANTENNA);
+  Serial.println("OK");
+   
 }
 
 
@@ -46,7 +32,7 @@ void init_camera()
 {
 
   Serial.print("Initializing Camera... ");
-  // Camera
+
   if (cam.begin()) {
     Serial.println("OK!");
   } 
@@ -57,8 +43,6 @@ void init_camera()
 
   cam.setImageSize(VC0706_320x240);
 
-  // Print out the camera version information (optional)
-  
   char *reply = cam.getVersion();
   if (reply == 0) {
     Serial.print("Failed to get version");
@@ -69,67 +53,45 @@ void init_camera()
     Serial.println("-----------------");
   }
   
+  pinMode(8, OUTPUT);
+
 }
+
 
 void setup()
 {
 
   Serial.begin(9600);
- 
-  
-  pinMode(3, INPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, INPUT);
-  pinMode(8, OUTPUT);
 
   Serial.print("Initializing SD card... ");
-  
+
   pinMode(chipSelect, OUTPUT);
-  
-  /*
-  if (!SD.begin(chipSelect)) {
+
+  if (!SD.begin(chipSelect)) 
     Serial.println("Error");
-    return;
-  }
-  Serial.println("Ok!");  
-  */  
-  
-   if (!card.init(SPI_HALF_SPEED, 4)) 
-     Serial.println("card.init failed!");
- 
-  // initialize a FAT volume
-  if (!volume.init(&card)) 
-    Serial.println("vol.init failed!");
-  
-  if (!root.openRoot(&volume)) 
-    Serial.println("openRoot failed");
-     
+  else
+    Serial.println("Ok!"); 
+
+  init_gps();
+
+  init_camera();
+
   delay(2000);  
 
 }
 
-
-
-void snapPhoto ()
+void snap_photo()
 {   
 
+  Serial.println("SnapPhoto");
   
-  if (! cam.takePicture()) 
-  {
-    Serial.println("Failed to snap!");
-    return;
-  }
-  else 
-    Serial.println("Picture taken!");             
+  File imgfile = SD.open("file2.jpg", FILE_WRITE);
 
-  
-  File imgFile = SD.open(fileName);
-  if (imgFile == false)
+  if (!imgfile)
   {
-    Serial.println("No puedo abrir el fichero");
+    Serial.println("Can't open the file");
     return;
   } 
-  
   
 
   // Get the size of the image (frame) taken  
@@ -137,13 +99,10 @@ void snapPhoto ()
   Serial.print("Storing ");
   Serial.print(jpglen, DEC);
   Serial.print(" byte image. ");
-  Serial.print(fileName);
-  Serial.print(" ");
-
-
   
+
   int32_t time = millis();
-  pinMode(8, OUTPUT);
+  
   // Read all the data up to # bytes!
   byte wCount = 0; // For counting # of writes
   while (jpglen > 0) {
@@ -151,7 +110,8 @@ void snapPhoto ()
     uint8_t *buffer;
     uint8_t bytesToRead = min(32, jpglen); // change 32 to 64 for a speedup but may not work with all setups!
     buffer = cam.readPicture(bytesToRead);
-    imgFile.write(buffer, bytesToRead);
+    uint8_t wbytes = imgfile.write(buffer, bytesToRead);
+
     if(++wCount >= 64) { // Every 2K, give a little feedback so it doesn't appear locked up
       Serial.print('.');
       wCount = 0;
@@ -160,7 +120,7 @@ void snapPhoto ()
     jpglen -= bytesToRead;
   }  
 
-  imgFile.close();
+  imgfile.close();
 
   time = millis() - time;
   Serial.println("done!");
@@ -170,55 +130,50 @@ void snapPhoto ()
 
 }
 
-uint32_t timer = millis();
 
-void loop()               
+void loop() 
 {
+
+  gpsConnection.listen();
+  delay(20);
   
-   // gps
-  delay(2000);
-  init_gps();
-  Serial.println("");
-  
-  for (;;)
-  {  
+  // Get to obtain a NMEA line
+  for(;;)
+  {
     char c = GPS.read();
     if (GPSECHO)
-    {
-      if (c) 
-        Serial.print(c);
-      
-    }
-            
-    if (GPS.newNMEAreceived()) {
-      char *nmea = GPS.lastNMEA();
-            
-      if (GPS.parse(nmea))
+      if (c)   Serial.print(c);
+
+    if (GPS.newNMEAreceived())
+      if (GPS.parse(GPS.lastNMEA()))
         break;
-    }
-  }       
-  
-  // camera    
-  init_camera();      
-  delay(2000);
-  //snapPhoto();
-
-  
-  File imgFile = SD.open("file.txt");
-  if (imgFile == false)
-  {
-    Serial.println("Can't open the file");
- 
-  } 
-  else
-  {
-     Serial.println("File opened correctly");
-     imgFile.close();
   }
-    
 
+  // Sentence parsed! 
+  Serial.println("OK");
   
+  delay(1000);
+  
+  cameraConnection.listen();
+  delay(20);
+   
+  // Take picture and save in SD card
+  snap_photo();     
+  
+
+  delay(10000);
+
+
 }
+
+
+
+
+
+
+
+
+
 
 
 
