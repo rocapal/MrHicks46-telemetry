@@ -2,21 +2,24 @@
 #include <Adafruit_GPS.h>
 #include <Adafruit_VC0706.h>
 #include <SoftwareSerial.h>
-#include <SD.h> 
+#include <SPI.h>
 
 
-#define GPSECHO true
+#define GPSECHO false
 #define chipSelect 4
 
+#include <SdFat.h>
+SdFat sd;
+SdFile myFile;
 
 SoftwareSerial gpsConnection(3,6);
-Adafruit_GPS GPS(&gpsConnection);
+//Adafruit_GPS GPS(&gpsConnection);
 
 SoftwareSerial cameraConnection(7,8);
-Adafruit_VC0706 cam(&cameraConnection); 
+//Adafruit_VC0706 cam(&cameraConnection); 
 
 
-void init_gps()
+void init_mygps (Adafruit_GPS &GPS)
 {
   Serial.print("Initializing GPS... ");    
   GPS.begin(9600);
@@ -24,16 +27,16 @@ void init_gps()
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   GPS.sendCommand(PGCMD_NOANTENNA);
   Serial.println("OK");
-   
+
 }
 
 
-void init_camera()
+void init_camera(Adafruit_VC0706* cam)
 {
 
   Serial.print("Initializing Camera... ");
 
-  if (cam.begin()) {
+  if (cam->begin()) {
     Serial.println("OK!");
   } 
   else {
@@ -41,9 +44,9 @@ void init_camera()
     return;
   }
 
-  cam.setImageSize(VC0706_320x240);
 
-  char *reply = cam.getVersion();
+
+  char *reply = cam->getVersion();
   if (reply == 0) {
     Serial.print("Failed to get version");
   } 
@@ -52,10 +55,18 @@ void init_camera()
     Serial.print(reply);
     Serial.println("-----------------");
   }
-  
-  pinMode(8, OUTPUT);
+
+  cam->setImageSize(VC0706_160x120);
+  uint8_t imgsize = cam->getImageSize();
+  /*
+  Serial.print("Image size: ");
+  if (imgsize == VC0706_640x480) Serial.println("640x480");
+  if (imgsize == VC0706_320x240) Serial.println("320x240");
+  if (imgsize == VC0706_160x120) Serial.println("160x120");
+  */
 
 }
+
 
 
 void setup()
@@ -67,50 +78,55 @@ void setup()
 
   pinMode(chipSelect, OUTPUT);
 
+  /*
   if (!SD.begin(chipSelect)) 
-    Serial.println("Error");
+   Serial.println("Error");
+   else
+   Serial.println("Ok!"); 
+   */
+
+  if (!sd.begin(chipSelect, SPI_HALF_SPEED)) 
+    sd.initErrorHalt();
   else
-    Serial.println("Ok!"); 
+    Serial.println("OK");
 
-  init_gps();
-
-  init_camera();
 
   delay(2000);  
 
 }
 
-void snap_photo()
+void snap_photo(Adafruit_VC0706* cam)
 {   
 
-  Serial.println("SnapPhoto");
-  
-  File imgfile = SD.open("file2.jpg", FILE_WRITE);
 
-  if (!imgfile)
+  if (! cam->takePicture()) 
   {
-    Serial.println("Can't open the file");
+    Serial.println("Failed to snap!");
     return;
-  } 
-  
+  }
+
+
+  if (!myFile.open("test.jpg", O_RDWR | O_CREAT ))
+    sd.errorHalt("opening test.jpg");
+
 
   // Get the size of the image (frame) taken  
-  uint16_t jpglen = cam.frameLength();
+  uint16_t jpglen = cam->frameLength();
   Serial.print("Storing ");
   Serial.print(jpglen, DEC);
   Serial.print(" byte image. ");
-  
+
 
   int32_t time = millis();
-  
+  pinMode(8, OUTPUT);
   // Read all the data up to # bytes!
   byte wCount = 0; // For counting # of writes
   while (jpglen > 0) {
     // read 32 bytes at a time;
     uint8_t *buffer;
     uint8_t bytesToRead = min(32, jpglen); // change 32 to 64 for a speedup but may not work with all setups!
-    buffer = cam.readPicture(bytesToRead);
-    uint8_t wbytes = imgfile.write(buffer, bytesToRead);
+    buffer = cam->readPicture(bytesToRead);
+    myFile.write(buffer, bytesToRead);
 
     if(++wCount >= 64) { // Every 2K, give a little feedback so it doesn't appear locked up
       Serial.print('.');
@@ -120,12 +136,10 @@ void snap_photo()
     jpglen -= bytesToRead;
   }  
 
-  imgfile.close();
+  myFile.close();
 
   time = millis() - time;
-  Serial.println("done!");
-  Serial.print(time); 
-  Serial.println(" ms elapsed");   
+  Serial.println("done!");   
 
 
 }
@@ -134,37 +148,74 @@ void snap_photo()
 void loop() 
 {
 
+  Adafruit_VC0706 *cam = new Adafruit_VC0706(&cameraConnection); 
+  cameraConnection.listen();
+  init_camera(cam);   
+
+  // Take picture and save in SD card
+  snap_photo(cam);     
+
+  free(cam);
+
+  delay(1000);
+
+
+
+  Adafruit_GPS *GPS = new Adafruit_GPS(&gpsConnection);
   gpsConnection.listen();
+  init_mygps(*GPS);
+
+
   delay(20);
+
+  // TODO: Put a timer (60sec) to get a GPS Position
+  uint32_t timer = millis();
   
-  // Get to obtain a NMEA line
   for(;;)
   {
-    char c = GPS.read();
+    
+    if (millis() - timer > 10000) 
+    {
+      Serial.println("Timeout GPS");
+      break;
+    }
+    
+    char c = GPS->read();
     if (GPSECHO)
       if (c)   Serial.print(c);
 
-    if (GPS.newNMEAreceived())
-      if (GPS.parse(GPS.lastNMEA()))
-        break;
+    if (GPS->newNMEAreceived())    
+      if (GPS->parse(GPS->lastNMEA()))      
+      {
+
+        if ( GPS->fix ) {
+          Serial.print("Location: ");
+          Serial.print(GPS->latitude, 4); 
+          Serial.print(GPS->lat);
+          Serial.print(", "); 
+          Serial.print(GPS->longitude, 4); 
+          Serial.println(GPS->lon);                    
+          Serial.println(GPS->speed);                    
+          Serial.println(GPS->altitude);
+          
+          break;
+        }
+
+        
+      }
   }
 
-  // Sentence parsed! 
-  Serial.println("OK");
-  
-  delay(1000);
-  
-  cameraConnection.listen();
-  delay(20);
-   
-  // Take picture and save in SD card
-  snap_photo();     
-  
+  free(GPS);
 
-  delay(10000);
+  delay(2000);
 
 
 }
+
+
+
+
+
 
 
 
