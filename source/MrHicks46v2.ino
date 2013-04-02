@@ -43,7 +43,6 @@ SdFile myFile;
 float temp;
 char data_file[13];
 
-
 void init_mygps (Adafruit_GPS* GPS)
 {
   Serial.print("Initializing GPS... ");    
@@ -114,29 +113,32 @@ void setup()
 
 }
 
-void snap_photo(Adafruit_VC0706* cam)
+boolean snap_photo(Adafruit_VC0706* cam)
 {   
-
 
   if (! cam->takePicture()) 
   {
     Serial.println("Failed to snap!");
-    return;
+    return false;
+  }
+  
+  data_file[11]='I';
+    
+  if (!myFile.open(data_file, O_RDWR | O_CREAT ))
+  {
+    //sd.errorHalt("opening file image");
+    return false;
   }
 
-  data_file[11]='I';
-
-
-  if (!myFile.open(data_file, O_RDWR | O_CREAT ))
-    sd.errorHalt("opening file image");
-
-
+  delay(20);
   // Get the size of the image (frame) taken  
   uint16_t jpglen = cam->frameLength();
   Serial.print("Storing ");
   Serial.print(jpglen, DEC);
   Serial.print(" byte image .");
 
+  if (jpglen == 0)
+    return false;
 
   int32_t time = millis();
   pinMode(8, OUTPUT);
@@ -162,6 +164,7 @@ void snap_photo(Adafruit_VC0706* cam)
   time = millis() - time;
   Serial.println("done!");   
 
+  return true;
 
 }
 
@@ -206,8 +209,8 @@ void get_temperature()
 {
   sensors.requestTemperatures();
   temp = sensors.getTempCByIndex(0);  
-  Serial.print("Temp: "); 
-  Serial.println(temp);
+  //Serial.print("Temp: "); 
+  //Serial.println(temp);
 }
 
 boolean camera = false;
@@ -215,9 +218,6 @@ boolean gps = false;
 
 void loop() 
 {
-
-
-
   // Only take a picture if we have GPS location
 
   SoftwareSerial* cameraConnection = new SoftwareSerial(7,8);
@@ -227,23 +227,29 @@ void loop()
   init_camera(cam);   
 
   if (gps) { 
-    // Take picture and save in SD card
-    snap_photo(cam);
-    camera = true;    
+    
+    // We have this loop becaouse sometimes the
+    // snap_photo fails and we try again
+    uint32_t timer_camera = millis();
+    for (;;)
+    {
+      if (millis() - timer_camera > 10000)
+        break;
+       
+      // Take picture and save in SD card 
+      boolean res = snap_photo(cam);
+      if (res)
+      {
+        camera = true;
+        break;
+      }
+    }
   }
 
   free(cameraConnection);
   free(cam);
-
-
-
-  delay(1000);
-
-
   
-
-
-  delay(20);
+  delay(1000);
 
   if (!gps)
   {
@@ -278,10 +284,10 @@ void loop()
             Serial.print(GPS->latitude, 4); 
             Serial.print(GPS->lat);
             Serial.print(", "); 
-            Serial.print(GPS->longitude, 4); 
+            Serial.print(GPS->longitude, 4);             
             Serial.println(GPS->lon);                    
-            Serial.println(GPS->speed);                    
-            Serial.println(GPS->altitude);
+            //Serial.println(GPS->speed);                    
+            //Serial.println(GPS->altitude);
   
             get_temperature();
   
@@ -303,13 +309,17 @@ void loop()
   if (gps && camera)
   {
     gps = false;
-    camera = false;
+    camera = false;        
+    
     uint32_t timer2 = millis();
     for(;;)
     {      
-      if (millis() - timer2 > 60000)
+      if (millis() - timer2 > 120000)
+      {
         return;
+      }
     }
+    
   }
 
 
