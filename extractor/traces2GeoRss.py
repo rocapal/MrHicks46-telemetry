@@ -74,7 +74,7 @@ def save_data (datetime, latitude, longitude, altitude, speed, temperature, imag
 	print sql_application % (datetime, latitude, longitude, altitude, speed, temperature, image_path) 
 
 	try:
-		cursor.execute(sql_application % (datetime, latitude, longitude, altitude, speed, temperature, image_path) )
+		cursor.execute(sql_application % (datetime, latitude, longitude, altitude, speed, temperature, os.path.basename(image_path)) )
 		db.commit()
 	except MySQLdb.IntegrityError:
 		print "-> Trace already save in database!"
