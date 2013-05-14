@@ -23,6 +23,7 @@ import os
 import csv
 import MySQLdb
 import re 
+import database
 
 db = None
 cursor = None
@@ -32,7 +33,7 @@ def init_bbdd():
 
 	global db, cursor
 	# open BBDD
-	db=MySQLdb.connect(host='localhost',user='root', passwd='rocapal',db='wtl_mrhicks')
+	db=MySQLdb.connect(host=database.HOST,user=database.USER, passwd=database.PASSWORD,db=database.NAME)
 	db.set_character_set('utf8')
 	cursor=db.cursor()	
 	cursor2 = db.cursor()
@@ -42,22 +43,22 @@ def init_bbdd():
 def fix_temp():
 
 	global db, cursor
-	sql = "SELECT * from data";
-	sql_update =  "UPDATE data SET temperature=%.2f WHERE datetime='%s'"
+	sql = "SELECT * from %s";
+	sql_update =  "UPDATE %s SET temperature=%.2f WHERE datetime='%s'"
 
-	cursor.execute(sql)
+	cursor.execute(sql %(database.TABLE))
 	rows = cursor.fetchall()
 
 	datetime = None
 	c = 0
 	for r in rows:
 
-		if (datetime != None and r[5]!= 85.00):
-			cursor.execute(sql_update % (float(r[5])- float(0.10), datetime))		
+		if (datetime != None and str(r[5]) != "85.00"):
+			cursor.execute(sql_update % (database.TABLE, float(r[5])- float(0.10), datetime))		
 			c = c + 1	
 
 
-		if (r[5]==85.00):
+		if (str(r[5])=="85.00"):
 			datetime=r[0]
 		else:
 			datetime = None

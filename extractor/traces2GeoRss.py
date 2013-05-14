@@ -24,6 +24,7 @@ import csv
 import datetime
 import MySQLdb
 import re 
+import database
 
 db = None
 cursor = None
@@ -32,7 +33,7 @@ def init_bbdd():
 
 	global db, cursor
 	# open BBDD
-	db=MySQLdb.connect(host='localhost',user='root', passwd='rocapal',db='wtl_mrhicks')
+	db=MySQLdb.connect(host=database.HOST,user=database.USER, passwd=database.PASSWORD,db=database.NAME)
 	db.set_character_set('utf8')
 	cursor=db.cursor()	
 	
@@ -69,12 +70,12 @@ def gps_to_dd (coordinate):
 def save_data (datetime, latitude, longitude, altitude, speed, temperature, image_path):
 
 	global db, cursor
-	sql_application = "INSERT INTO data (datetime, latitude, longitude, altitude, speed, temperature, image) VALUES ('%s', %.4f, %.4f, %.3f, %.3f, %.2f, '%s');"
+	sql_application = "INSERT INTO %s (datetime, latitude, longitude, altitude, speed, temperature, image) VALUES ('%s', %.4f, %.4f, %.3f, %.3f, %.2f, '%s');"
 
-	print sql_application % (datetime, latitude, longitude, altitude, speed, temperature, image_path) 
+	print sql_application % (database.TABLE, datetime, latitude, longitude, altitude, speed, temperature, image_path) 
 
 	try:
-		cursor.execute(sql_application % (datetime, latitude, longitude, altitude, speed, temperature, os.path.basename(image_path)) )
+		cursor.execute(sql_application % (database.TABLE, datetime, latitude, longitude, altitude, speed, temperature, os.path.basename(image_path)) )
 		db.commit()
 	except MySQLdb.IntegrityError:
 		print "-> Trace already save in database!"
@@ -83,8 +84,8 @@ def save_data (datetime, latitude, longitude, altitude, speed, temperature, imag
 
 init_bbdd()
 #dir = "/home/rocapal/mrhicks/trazas/navacerrada/"
-dir = "/home/rocapal/Dropbox/MrHicks46-WTL/"
-#dir = "/tmp/test/"
+#dir = "/home/rocapal/Dropbox/MrHicks46-WTL/"
+dir = "/home/rocapal/MrHicks46-telemetry/data/"
 
 for file in os.listdir(dir):
 
