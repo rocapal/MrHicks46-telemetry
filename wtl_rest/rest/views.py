@@ -7,7 +7,7 @@ import collections
 import os
 import datetime
 
-from wtl_rest.config import database
+from wtl_rest.config import database, server
 
 JSON_MIMETYPE="application/json"
 XML_MIMETYPE ="application/xml"
@@ -115,8 +115,8 @@ def traces_georss(request, date):
 
 		georss += "<content type='html'>"
 	
-
-		georss += "&lt;p&gt;&lt;a href=&quot;http://pbs.twimg.com/media/BJ8GGNdCQAEKuOX.jpg&quot; &gt;&lt;img src=&quot;http://pbs.twimg.com/media/BJ8GGNdCQAEKuOX.jpg&quot; width=&quot;240&quot; height=&quot;179&quot; /&gt;&lt;/a&gt;&lt;/p&gt;"
+		url_image = "http://" + server.NAME + "/" + server.DATA_REST + "/" + str(r[6]) 
+		georss += "&lt;p&gt;&lt;a href=&quot;" + url_image + "&quot; &gt;&lt;img src=&quot;" + url_image + "&quot; width=&quot;240&quot; height=&quot;179&quot; /&gt;&lt;/a&gt;&lt;/p&gt;"
 		
 		georss += "&lt;p&gt; Temp: " + str(r[5]).replace(".",",") + " C &lt;/p&gt;"
 		georss += "&lt;p&gt; Altitude: " + str(r[3]).replace(".",",") + " m. &lt;/p&gt;"
@@ -157,20 +157,20 @@ def traces(request, date):
 
 	traces_list = []
 	for r in rows:
-		d = collections.OrderedDict()
+		d = collections.defaultdict()
 		d['datetime'] = str(r[0])
 		d['latitude'] = r[1]
 		d['longitude'] = r[2]
 		d['altitude'] = r[3]
 		d['speed'] = r[4]
 		d['temperature'] = r[5]
-		d['image'] = os.path.basename(str(r[6]))
+		d['image'] = (str(r[6]))
 
 		traces_list.append(d)
 
 	
 
-	r_data = collections.OrderedDict()
+	r_data = collections.defaultdict()
 	r_data['num_traces'] = int(get_simple_sql ("SELECT COUNT(*) FROM %s WHERE DATE(datetime)='%s';" % (database.TABLE, date)))
 	r_data['max_temp'] = float(get_simple_sql ("SELECT MAX(temperature) FROM %s WHERE DATE(datetime)='%s';" % (database.TABLE, date)))
 	r_data['min_temp'] = float(get_simple_sql ("SELECT MIN(temperature) FROM %s WHERE DATE(datetime)='%s';" % (database.TABLE, date)))

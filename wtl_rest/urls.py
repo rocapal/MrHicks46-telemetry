@@ -15,5 +15,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
-    (r'^rest/', include('wtl_rest.rest.urls')),
+    (r'^api/', include('wtl_rest.rest.urls')),
+
+    (r'^data/(?P<path>.*)I$', 'django.views.static.serve', {'document_root': '/home/rocapal/rest.worldtriplogger.com/public/data/'})
 )
