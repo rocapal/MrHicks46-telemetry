@@ -73,8 +73,11 @@ def dates(request):
 
 
 	close_DB()
-	
-	return HttpResponse(simplejson.dumps(objects_list), JSON_MIMETYPE)
+
+	response = HttpResponse(simplejson.dumps(objects_list), JSON_MIMETYPE)
+	response['Access-Control-Allow-Origin']  = "*"
+
+	return response
 
 
 
