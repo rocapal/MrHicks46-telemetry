@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8" />
+	<!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<title></title>
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen, projection" />
+        <link rel="stylesheet" href="css/jquery-ui-1.10.3.custom.css" type="text/css" media="screen, projection" />
+    <script type="text/javascript" charset="utf-8" src="js/jquery-1.9.1.min.js"></script> 
+    <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.10.3.custom.min.js"></script> 
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+
+   
+
+    <script>
+
+
+
+var map;
+var georssLayer;
+var dates;
+var minute;
+
+function initialize (wtl_url) 
+{
+
+  var myLatlng = new google.maps.LatLng(0.0, 0.0);
+  var mapOptions = {
+    zoom: 4,
+    center: myLatlng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  }
+
+  map = new google.maps.Map(document.getElementById('content'), mapOptions);
+
+   georssLayer = new google.maps.KmlLayer({
+    url: wtl_url
+   
+  });
+  georssLayer.setMap(map);
+}
+
+
+function load_map (url)
+{
+	refresh_map(url);
+}
+
+function load2_map (date)
+{
+	wtl_url = "http://rest.worldtriplogger.com/api/traces/georss/" + date + "/?interval=" + minute;
+
+	console.log(wtl_url);
+	refresh_map(wtl_url);
+}
+
+function refresh_map (wtl_url)
+{
+//   georssLayer.setMap(null);
+//   georssLayer = null;
+
+   georssLayer = new google.maps.KmlLayer({
+     url: wtl_url   
+   });
+   
+   georssLayer.setMap(map);
+   
+
+}
+
+
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+$.getJSON( 'http://rest.worldtriplogger.com/api/dates/',
+    function(data){
+        if (data) 
+	{		
+		dates = eval(data);
+
+		$(function() {
+
+			$( "#slider-range-max" ).slider({
+			      range: "max",
+			      min: 0,
+			      max: 60,
+			      value: 5,
+			      step: 5,
+			      slide: function( event, ui ) {
+			
+				if (ui.value == 0) minute=2; else minute = ui.value;
+				$( "#amount" ).val( "Show traces each " + minute + " min.");
+			      }
+			    });
+
+			minute = $( "#slider-range-max" ).slider( "value" );
+			$( "#amount" ).val( "Show traces each " +  minute + " min.");
+	
+
+
+	    		$( "#datepicker" ).datepicker(
+				{ firstDay: 1,
+				  dateFormat: "yy-mm-dd",
+				  onSelect: function(dateText, inst) { load2_map(dateText);},
+				  beforeShowDay: noWeekendsOrHolidays
+
+		 	});
+
+		});
+
+	}
+	else
+		alert("Connection problem!");
+		
+    });
+
+
+
+function daysToMark (date) {
+
+	var month = date.getMonth() + 1;
+	var day = date.getDate();
+	var d = date.getFullYear() + "-" + ((month > 10) ? month + '' : "0" + month) + "-" + ((day >= 10) ? day + '' : "0" + day)
+	
+
+	for (var i=0; i<dates.length; i++) {
+		
+		if (dates[i] == d){
+			return[true]
+		}
+	}
+
+	return [false];
+}
+
+function noWeekendsOrHolidays(date) {
+	var noWeekend = jQuery.datepicker.noWeekends(date);
+	return daysToMark(date);
+}
+
+
+
+
+ 
+
+    </script>
+
+</head>
+<body>
+
+<div id="wrapper">
+
+	<header align="center" id="header">
+		<img src="img/header10.jpg" height="100px"/>
+
+	</header><!-- #header-->
+
+	<section id="middle">
+
+		<div id="container">
+			<div id="content">
+				<strong>Content:</strong> Sed placerat accumsan ligula. Aliquam felis magna, congue quis, tempus eu, aliquam vitae, ante. Cras neque justo, ultrices at, rhoncus a, facilisis eget, nisl. Quisque vitae pede. Nam et augue. Sed a elit. Ut vel massa. Suspendisse nibh pede, ultrices vitae, ultrices nec, mollis non, nibh. In sit amet pede quis leo vulputate hendrerit. Cras laoreet leo et justo auctor condimentum. Integer id enim. Suspendisse egestas, dui ac egestas mollis, libero orci hendrerit lacus, et malesuada lorem neque ac libero. Morbi tempor pulvinar pede. Donec vel elit.
+			</div><!-- #content-->
+		</div><!-- #container-->
+
+		<aside id="sideLeft">
+			<div align="center" id="datepicker"></div>
+
+			
+			<div id="slider-range-max">				
+			</div>
+
+			<div id="slider-data">
+			  
+			   <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+			   <label for="amount" style="border: 0; color: #f6931f; font-weight: bold;"></label>
+			  
+			</div>
+
+			<div id="paypal">
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+">
+<input type="image" src="https://www.paypalobjects.com/es_ES/ES/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal. La forma rápida y segura de pagar en Internet.">
+<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
+</form>
+		</div>
+
+		</aside><!-- #sideLeft -->
+
+	</section><!-- #middle-->
+
+	<footer id="footer">
+	<strong>Footer:</strong> Mus elit Morbi mus enim lacus at quis Nam eget morbi. Et semper urna urna non at cursus dolor vestibulum neque enim. Tellus interdum at laoreet laoreet lacinia lacinia sed Quisque justo quis. Hendrerit scelerisque lorem elit orci tempor tincidunt enim Phasellus dignissim tincidunt. Nunc vel et Sed nisl Vestibulum odio montes Aliquam volutpat pellentesque. Ut pede sagittis et quis nunc gravida porttitor ligula.
+</footer><!-- #footer -->
+
+</div><!-- #wrapper -->
+
+
+
+</body>
+</html>
