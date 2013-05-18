@@ -29,9 +29,13 @@ function initialize (wtl_url)
 {
   
   var myLatlng = null;
+  var is_georss = true;
 
   if (new String(wtl_url).indexOf("http://") == -1)
+  {
 	myLatlng = new google.maps.LatLng(0.0, 0.0);
+	is_georss = false;
+  }
   	
 
   var mapOptions = {
@@ -42,10 +46,14 @@ function initialize (wtl_url)
 
   map = new google.maps.Map(document.getElementById('content'), mapOptions);
 
-   georssLayer = new google.maps.KmlLayer({
-    url: wtl_url   
-  });
-  georssLayer.setMap(map);
+  if (is_georss)
+  {
+    georssLayer = new google.maps.KmlLayer({
+      url: wtl_url   
+    });
+    georssLayer.setMap(map);
+  }
+
 }
 
 
