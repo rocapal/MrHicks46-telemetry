@@ -98,12 +98,59 @@ input {
 	height: 100%;
 	float: left;
 	overflow: hidden;
+	position: relative;
 }
 #content {
 	float: right;
 	height: 550px;	
-	width: 78%;		
+	width: 78%;	
 
+}
+
+#content-note
+{
+	position:absolute;
+        float: left;
+	height: 170px;
+	width: 170px;
+	left:10px; 
+	bottom:10px;
+	margin-left: 22%;
+	margin-bottom: 1%;
+	border-radius: 25px;
+	background-image:url('img/hoja_cuaderno.png');
+
+}
+
+#content-data
+{
+	margin-left: 5%;
+	margin-top: 30%;
+
+}
+
+#content-spin
+{
+	display: none;
+	position:absolute;
+	left:50%; 
+	bottom:50%;
+	height: 120px;
+	width: 150px;
+	border-radius: 25px;
+	background: -webkit-gradient(linear, left top, left bottom, from(#b4d7ff), to(#fff));
+}
+
+
+
+/* Sidebar Left
+-----------------------------------------------------------------------------*/
+#sideLeft {
+	float: left;
+	width: 22%;
+	margin-left: -100%;
+	position: relative;
+	
 }
 
 #slider-range-max
@@ -121,15 +168,7 @@ input {
 {
 	margin: 5% 25% 5% 25%;
 }
-/* Sidebar Left
------------------------------------------------------------------------------*/
-#sideLeft {
-	float: left;
-	width: 22%;
-	margin-left: -100%;
-	position: relative;
-	
-}
+
 
 
 /* Footer

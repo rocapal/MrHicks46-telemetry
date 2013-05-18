@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="css/jquery-ui-1.10.3.custom.css" type="text/css" media="screen, projection" />
     <script type="text/javascript" charset="utf-8" src="js/jquery-1.9.1.min.js"></script> 
     <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.10.3.custom.min.js"></script> 
+    <script type="text/javascript" charset="utf-8" src="js/spin.min.js"></script> 
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
 
    
@@ -22,11 +23,17 @@ var map;
 var georssLayer;
 var dates;
 var minute;
+var spinner;
 
 function initialize (wtl_url) 
 {
+  
+  var myLatlng = null;
 
-  var myLatlng = new google.maps.LatLng(0.0, 0.0);
+  if (new String(wtl_url).indexOf("http://") == -1)
+	myLatlng = new google.maps.LatLng(0.0, 0.0);
+  	
+
   var mapOptions = {
     zoom: 4,
     center: myLatlng,
@@ -36,44 +43,77 @@ function initialize (wtl_url)
   map = new google.maps.Map(document.getElementById('content'), mapOptions);
 
    georssLayer = new google.maps.KmlLayer({
-    url: wtl_url
-   
+    url: wtl_url   
   });
   georssLayer.setMap(map);
 }
 
 
-function load_map (url)
-{
-	refresh_map(url);
-}
 
-function load2_map (date)
+function load_map (date)
 {
+
+	
+	$("#content-spin").css("display", "block");
+	var target = document.getElementById('content-spin')
+	spinner = new Spinner(opts).spin(target);
+	
 	wtl_url = "http://rest.worldtriplogger.com/api/traces/georss/" + date + "/?interval=" + minute;
 
-	console.log(wtl_url);
-	refresh_map(wtl_url);
+	initialize(wtl_url);
+
+	load_data(date);
+
+          var opts = {
+	  lines: 13, // The number of lines to draw
+	  length: 10, // The length of each line
+	  width: 5, // The line thickness
+	  radius: 20, // The radius of the inner circle
+	  corners: 1, // Corner roundness (0..1)
+	  rotate: 0, // The rotation offset
+	  direction: 1, // 1: clockwise, -1: counterclockwise
+	  color: '#000', // #rgb or #rrggbb
+	  speed: 1, // Rounds per second
+	  trail: 60, // Afterglow percentage
+	  shadow: false, // Whether to render a shadow
+	  hwaccel: false, // Whether to use hardware acceleration
+	  className: 'spinner', // The CSS class to assign to the spinner
+	  zIndex: 2e9, // The z-index (defaults to 2000000000)
+	  top: 'auto', // Top position relative to parent in px
+	  left: 'auto' // Left position relative to parent in px
+  };
+	
+
+
+	
 }
 
-function refresh_map (wtl_url)
+function load_data (date)
 {
-//   georssLayer.setMap(null);
-//   georssLayer = null;
+	data_url = "http://rest.worldtriplogger.com/api/traces/" + date + "/";
+	
+	$.getJSON( data_url,
+		function(data){
+			if (data) {
 
-   georssLayer = new google.maps.KmlLayer({
-     url: wtl_url   
-   });
-   
-   georssLayer.setMap(map);
-   
+				var short_data = "Max. Alt: " + data["max_altitude"] + " m. <br>";
+				short_data += "Max. Speed: " + data["max_speed"] + " km/h <br>";
+				short_data += "Temp: " + data["min_temp"] + "/" + data["max_temp"] + "<br>";
+				short_data += "Altitude Gap: " + data["acc_altitude"] + " m."
+				$('#content-data').empty();
+				$('#content-data').append(short_data);
+
+				spinner.stop();
+				$("#content-spin").css("display", "none");
+			}
+		}
+	);
 
 }
 
 
 
 google.maps.event.addDomListener(window, 'load', initialize);
-
 
 
 $.getJSON( 'http://rest.worldtriplogger.com/api/dates/',
@@ -84,6 +124,7 @@ $.getJSON( 'http://rest.worldtriplogger.com/api/dates/',
 
 		$(function() {
 
+			// slider
 			$( "#slider-range-max" ).slider({
 			      range: "max",
 			      min: 0,
@@ -97,20 +138,20 @@ $.getJSON( 'http://rest.worldtriplogger.com/api/dates/',
 			      }
 			    });
 
+			// minutes
 			minute = $( "#slider-range-max" ).slider( "value" );
 			$( "#amount" ).val( "Show traces each " +  minute + " min.");
 	
-
-
+			// calendar
 	    		$( "#datepicker" ).datepicker(
 				{ firstDay: 1,
 				  dateFormat: "yy-mm-dd",
-				  onSelect: function(dateText, inst) { load2_map(dateText);},
+				  onSelect: function(dateText, inst) { load_map(dateText);},
 				  beforeShowDay: noWeekendsOrHolidays
 
 		 	});
 
-		});
+		});		
 
 	}
 	else
@@ -145,7 +186,7 @@ function noWeekendsOrHolidays(date) {
 
 
 
- 
+
 
     </script>
 
@@ -162,9 +203,19 @@ function noWeekendsOrHolidays(date) {
 	<section id="middle">
 
 		<div id="container">
-			<div id="content">
-				<strong>Content:</strong> Sed placerat accumsan ligula. Aliquam felis magna, congue quis, tempus eu, aliquam vitae, ante. Cras neque justo, ultrices at, rhoncus a, facilisis eget, nisl. Quisque vitae pede. Nam et augue. Sed a elit. Ut vel massa. Suspendisse nibh pede, ultrices vitae, ultrices nec, mollis non, nibh. In sit amet pede quis leo vulputate hendrerit. Cras laoreet leo et justo auctor condimentum. Integer id enim. Suspendisse egestas, dui ac egestas mollis, libero orci hendrerit lacus, et malesuada lorem neque ac libero. Morbi tempor pulvinar pede. Donec vel elit.
-			</div><!-- #content-->
+			<div id="content"></div><!-- #content-->
+
+			<div align="center" id="content-spin">
+				<strong>Loading data ... </strong>
+			</div>
+
+			<div id="content-note"> 
+				<div id="content-data"> 
+				</div>	
+			</div>		
+			
+
+			
 		</div><!-- #container-->
 
 		<aside id="sideLeft">
