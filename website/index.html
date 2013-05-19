@@ -51,9 +51,8 @@ function initialize (wtl_url)
 
   if (is_georss)
   {
-    georssLayer = new google.maps.KmlLayer({
-      url: wtl_url   
-    });
+
+    georssLayer = new google.maps.KmlLayer(wtl_url + "&dummy=" + (new Date()).getTime());
     georssLayer.setMap(map);
   }
 
@@ -147,7 +146,7 @@ function load_data (date)
 google.maps.event.addDomListener(window, 'load', initialize);
 
 
-$.getJSON( 'http://rest.worldtriplogger.com/api/dates/',
+$.getJSON( 'http://rest.worldtriplogger.com/api/dates/?dummy=' + (new Date()).getTime() ,
     function(data){
         if (data) 
 	{		
