@@ -138,7 +138,7 @@ input {
 	height: 120px;
 	width: 150px;
 	border-radius: 25px;
-	background: -webkit-gradient(linear, left top, left bottom, from(#ffc871), to(#fff));
+	background: linear-gradient(to bottom, #ffc871 0%,#fff 100%); 
 }
 
 
