@@ -11,6 +11,7 @@
 
 
 	<link rel="stylesheet" href="css/stylesheet.css" type="text/css" charset="utf-8" />
+	<link rel="stylesheet" href="css/mimenu.css" type="text/css" charset="utf-8" />
 
     <script type="text/javascript" charset="utf-8" src="js/jquery-1.9.1.min.js"></script> 
     <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.10.3.custom.min.js"></script> 
@@ -27,6 +28,7 @@ var georssLayer;
 var dates;
 var minute;
 var spinner;
+var first_day;
 
 function initialize (wtl_url) 
 {
@@ -135,6 +137,10 @@ function load_data (date)
 				  ga('create', 'UA-11595344-6', 'worldtriplogger.com');
 				  ga('send', 'pageview');
 
+				// Google Adsense
+				//$('#adsense').html('<iframe src="ads.html" align="center" scrolling="no" style="border: 0; float=right;" height="250px"></iframe>');
+				
+
 			}
 		}
 	);
@@ -143,7 +149,7 @@ function load_data (date)
 
 
 
-google.maps.event.addDomListener(window, 'load', initialize);
+//google.maps.event.addDomListener(window, 'load', initialize);
 
 
 $.getJSON( 'http://rest.worldtriplogger.com/api/dates/?dummy=' + (new Date()).getTime() ,
@@ -152,6 +158,7 @@ $.getJSON( 'http://rest.worldtriplogger.com/api/dates/?dummy=' + (new Date()).ge
 	{		
 		dates = eval(data);
 
+		first_day = data[0];
 		$(function() {
 
 			// slider
@@ -165,6 +172,8 @@ $.getJSON( 'http://rest.worldtriplogger.com/api/dates/?dummy=' + (new Date()).ge
 			
 				if (ui.value == 0) minute=2; else minute = ui.value;
 				$( "#amount" ).val( "Show traces each " + minute + " min.");
+
+				
 			      }
 			    });
 
@@ -182,6 +191,8 @@ $.getJSON( 'http://rest.worldtriplogger.com/api/dates/?dummy=' + (new Date()).ge
 		 	});
 
 		});		
+
+		load_map(first_day);
 
 	}
 	else
@@ -237,11 +248,19 @@ function noWeekendsOrHolidays(date) {
 <div id="wrapper">
 
 	<header align="center" id="header">
-		<img src="img/header10.jpg" height="100px"/>
-
+		<img src="img/header10.jpg" height="150px"/> 		
 	</header><!-- #header-->
 
 	<section id="middle">
+
+		<div id="menu"
+			 <nav class="horizontal-nav full-width horizontalNav-notprocessed">
+			    <ul>				
+			    </ul>
+			</nav>
+		</div>
+
+
 
 		<div id="container">
 			<div id="content"></div><!-- #content-->
@@ -270,7 +289,19 @@ function noWeekendsOrHolidays(date) {
 			  
 			   <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
 			   <label for="amount" style="border: 0; color: #f6931f; font-weight: bold;"></label>
+
+
 			  
+			</div>
+			<div  style="margin-top:10%; float=right;">
+				<p align="center"><label for="amount" style="border: 0; color: #f6931f; font-weight: bold;"><strong>Discover what is WorlTripLogger<strong></label><br><br>
+					<iframe width="190" height="170" src="http://www.youtube-nocookie.com/embed/mPAgRaiswbY" frameborder="0" allowfullscreen></iframe>
+				</p>
+				
+			  
+			</div>
+
+			<div align="right"  id="adsense">			
 			</div>
 
 			
@@ -279,8 +310,22 @@ function noWeekendsOrHolidays(date) {
 
 	</section><!-- #middle-->
 
-	<footer id="footer">
-	<strong>Footer:</strong> Mus elit Morbi mus enim lacus at quis Nam eget morbi. Et semper urna urna non at cursus dolor vestibulum neque enim. Tellus interdum at laoreet laoreet lacinia lacinia sed Quisque justo quis. Hendrerit scelerisque lorem elit orci tempor tincidunt enim Phasellus dignissim tincidunt. Nunc vel et Sed nisl Vestibulum odio montes Aliquam volutpat pellentesque. Ut pede sagittis et quis nunc gravida porttitor ligula.
+	<div id="menu"
+			 <nav class="horizontal-nav full-width horizontalNav-notprocessed">
+			    <ul>				
+			    </ul>
+			</nav>
+		</div>
+
+	<footer align="center" id="footer">
+
+	<p align="center">
+		WorldTripLogger is a great way to save all you experiencies that you live in your trips! <br>
+		WorldTripLogger saves itself important data of your trip like: geoposition, altitude, speed, temperature and also it takes a picture!<br>
+		Please tell us comments, feedback or whatever you want: <a href="mailto:contact@worldtriplogger.com">contact @ worldtriplogger . com </a>
+	</p>
+		
+	
 </footer><!-- #footer -->
 
 </div><!-- #wrapper -->

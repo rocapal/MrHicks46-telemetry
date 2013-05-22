@@ -1,0 +1,44 @@
+// There is no required CSS for this plugin to work properly
+// but here is what is being used to style this demo
+.horizontal-nav {
+    background: #efefef;
+    border-radius: 6px;
+    position:relative;
+}
+.horizontal-nav ul {
+
+    background: #f6931f;
+    float: left;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid  #f6931f;
+     width: 100%;
+}
+.horizontal-nav ul li {
+    float: left;
+    border-left: 1px solid #efefef;
+}
+.horizontal-nav ul li:first-child {
+    border-left: 0 none;
+}
+.horizontal-nav ul li a {
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    border-top: 1px solid rgba(255,255,255, 0.25);
+    border-left: 1px solid rgba(255,255,255, 0.25);
+}
+.horizontal-nav ul li:first-child a {
+    border-left: 0 none;
+}
+.horizontal-nav ul li a:hover {
+    background: #f6931f;
+}
+.horizontal-nav ul li:first-child a {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+.horizontal-nav ul li:last-child a {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}

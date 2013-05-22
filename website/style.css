@@ -68,6 +68,8 @@ input {
 	min-height: 100%;
 	height: auto !important;
 	height: 100%;
+
+ 
 	
 }
 
@@ -75,8 +77,9 @@ input {
 /* Header
 -----------------------------------------------------------------------------*/
 #header {
-	height: 100px;
+	height: 150px;
 	margin: 15px 0px 15px 0px;
+	
 }
 
 
@@ -99,7 +102,9 @@ input {
 	float: left;
 	overflow: hidden;
 	position: relative;
+	margin-top: 1%;
 }
+
 #content {
 	float: right;
 	height: 550px;	
@@ -121,6 +126,17 @@ input {
 	background-image:url('img/hoja_cuaderno.png');
 
 }
+
+
+#menu
+{
+	width: 100%;
+	
+	background: #BFF08E;
+	margin-top: 1%;
+	margin-bottom: 1%;
+}
+
 
 #content-data
 {
@@ -150,6 +166,8 @@ input {
 	width: 22%;
 	margin-left: -100%;
 	position: relative;
+	margin-top: 1%;
+
 	
 }
 
@@ -164,10 +182,14 @@ input {
 	margin: 5% 25% 5% 25%;
 }
 
-#paypal
+#adsense
 {
-	margin: 5% 25% 5% 25%;
+	float: center;
+	position: relative;
+
 }
+
+
 
 
 
@@ -175,9 +197,8 @@ input {
 -----------------------------------------------------------------------------*/
 #footer {
 	float: left;
-	width: 90%;
+	width: 100%;
 	margin: 0px 5% 0px 5%;
-	height: 50px;
-	background: #BFF08E;
+	height: 50px;	
 	
 }
