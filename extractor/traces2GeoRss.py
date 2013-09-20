@@ -85,38 +85,44 @@ def save_data (datetime, latitude, longitude, altitude, speed, temperature, imag
 init_bbdd()
 #dir = "/home/rocapal/mrhicks/trazas/navacerrada/"
 #dir = "/home/rocapal/Dropbox/MrHicks46-WTL/"
-dir = "/home/rocapal/MrHicks46-telemetry/data/"
+dir = "/home/rocapal/rest.worldtriplogger.com/public/data/"
 
 for file in os.listdir(dir):
 
 	if ( file[len(file)-1] == 'D' ):
 
 		print "Parsing " + dir + file
-		# convert the DateTime		
-		date_time_str = "20%s-%s-%s.%s:%s" % (file[0:2], file[2:4], file[4:6], file[6:8], file[9:11]) 
-		date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d.%H:%M')
+		# convert the DateTime
+		minute = ( "00" , file[9:11]) [int(file[9:11]) < 60]
+		date_time_str = "20%s-%s-%s.%s:%s" % (file[0:2], file[2:4], file[4:6], file[6:8], minute) 
 				
 
-		# read the file
-		array = list( csv.reader( open( dir + file ) ) )
-		temperature = array[0][0]
-		latitude = gps_to_dd(array[1][0])
-		longitude = gps_to_dd(array[2][0])
-		altitude = array[3][0]
-		speed = float(array[4][0])*1.854
-		image = dir + file[0:len(file)-1]+"I"
+		try:
+			date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d.%H:%M')
+			# read the file
+			array = list( csv.reader( open( dir + file ) ) )
+			temperature = array[0][0]
+			latitude = gps_to_dd(array[1][0])
+			longitude = gps_to_dd(array[2][0])
+			altitude = array[3][0]
+			speed = float(array[4][0])*1.854
+			image = dir + file[0:len(file)-1]+"I"
 
-		print date
-		print array[1][0] + " , " + array[2][0] 
-		print latitude + " , " + longitude
-		print altitude
-		print speed
-		print temperature
-		print "Image: " + image
-		print ""
+			print date
+			print array[1][0] + " , " + array[2][0] 
+			print latitude + " , " + longitude
+			print altitude
+			print speed
+			print temperature
+			print "Image: " + image
+			print ""
 
-		save_data (date, float(latitude), float(longitude) ,float(altitude), float(speed), float(temperature), image)
+			save_data (date, float(latitude), float(longitude) ,float(altitude), float(speed), float(temperature), image)
 
+		except IndexError:
+			print "Error (IndexError)"
+		except ValueError:
+			print "Error (ValueError)"
 
 db.close()
 

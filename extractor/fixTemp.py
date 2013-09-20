@@ -52,11 +52,10 @@ def fix_temp():
 	datetime = None
 	c = 0
 	for r in rows:
-
+		
 		if (datetime != None and str(r[5]) != "85.00"):
 			cursor.execute(sql_update % (database.TABLE, float(r[5])- float(0.10), datetime))		
 			c = c + 1	
-
 
 		if (str(r[5])=="85.00"):
 			datetime=r[0]
