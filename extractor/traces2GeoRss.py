@@ -29,6 +29,8 @@ import database
 db = None
 cursor = None
 
+VERSION = 2
+
 def init_bbdd():
 
 	global db, cursor
@@ -85,25 +87,40 @@ def save_data (datetime, latitude, longitude, altitude, speed, temperature, imag
 init_bbdd()
 #dir = "/home/rocapal/mrhicks/trazas/navacerrada/"
 #dir = "/home/rocapal/Dropbox/MrHicks46-WTL/"
-dir = "/home/rocapal/rest.worldtriplogger.com/public/data/"
+#dir = "/home/rocapal/rest.worldtriplogger.com/public/data/"
+dir = "/home/rocapal/WTL/v2/data/2013-CanalDiMidi/"
 
 for file in os.listdir(dir):
 
 	if ( file[len(file)-1] == 'D' ):
 
 		print "Parsing " + dir + file
-		# convert the DateTime
-		minute = ( "00" , file[9:11]) [int(file[9:11]) < 60]
-		date_time_str = "20%s-%s-%s.%s:%s" % (file[0:2], file[2:4], file[4:6], file[6:8], minute) 
-				
+
 
 		try:
-			date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d.%H:%M')
+                        date = None
+                        if (VERSION == 1):
+                                # convert the DateTime
+                                minute = ( "00" , file[9:11]) [int(file[9:11]) < 60]
+                                date_time_str = "20%s-%s-%s.%s:%s" % (file[0:2], file[2:4], file[4:6], file[6:8], minute) 
+
+                                date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d.%H:%M')
+                        else:
+
+                                date = datetime.datetime.strptime(file, '%Y.%m.%d-%H.%M.%SD')
+                                
 			# read the file
 			array = list( csv.reader( open( dir + file ) ) )
-			temperature = array[0][0]
-			latitude = gps_to_dd(array[1][0])
-			longitude = gps_to_dd(array[2][0])
+			temperature = array[5][0]
+                        latitude = None
+                        longitude = None
+                        if (VERSION == 1):
+                                latitude = gps_to_dd(array[1][0])
+                                longitude = gps_to_dd(array[2][0])
+                        else:
+                                latitude = array[1][0]
+                                longitude = array[2][0]
+
 			altitude = array[3][0]
 			speed = float(array[4][0])*1.854
 			image = dir + file[0:len(file)-1]+"I"
